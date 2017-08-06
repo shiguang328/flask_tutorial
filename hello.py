@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, flash
 from flask import make_response
 from flask_bootstrap import Bootstrap
 from flask_script import Manager
@@ -24,12 +24,13 @@ moment = Moment(app) #初始化Flask Moment
 
 @app.route('/', methods=['GET','POST'])
 def index():
-    name = None
     form=NameForm() # NameForm是上面定义的类（继承自flask_wtf.FlaskForm）
     if form.validate_on_submit():
-        name = form.name.data
-        form.name.data = '' # 清空表单字段
-    return render_template('index.html', form=form, name = name,
+        session['name'] = form.name.data
+        return redirect(url_for('index'))
+    # 使用get() 获取字典中键对应的值以避免未找到键的异常情况，
+    # 因为对于不存在的键，get() 会返回默认值None。
+    return render_template('index.html', form=form, name = session.get('name'),
                            current_time=datetime.utcnow()) #current_time属于moment类
 
 @app.route('/user/<name>')
