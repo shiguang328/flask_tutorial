@@ -1,18 +1,18 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, session, redirect, url_for
 from flask import make_response
 from flask_bootstrap import Bootstrap
 from flask_script import Manager
 from flask_moment import Moment #Flask-Moment 是一个Flask 程序扩展，能把moment.js 集成到Jinja2 模板中。
 from datetime import datetime
 #表单相关
-from flask_wtf import Form
+from flask_wtf import FlaskForm # 以前的Form变成了FlaskForm,新版本中只有FlaskForm了
 from wtforms import StringField,SubmitField
 from wtforms.validators import Required
 
 # StringField类表示属性为type="text" 的<input> 元素
 # SubmitField 类表示属性为type="submit" 的<input> 元素
 # 可选参数validators 指定一个由验证函数组成的列表,Required() 确保提交的字段不为空
-class NameForm(Form):
+class NameForm(FlaskForm):
     name = StringField('what is your name?',validators=[Required()])
     submit = SubmitField('Submit')
 
@@ -22,9 +22,14 @@ manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app) #初始化Flask Moment
 
-@app.route('/')
+@app.route('/', methods=['GET','POST'])
 def index():
-    return render_template('index.html',
+    name = None
+    form=NameForm() # NameForm是上面定义的类（继承自flask_wtf.FlaskForm）
+    if form.validate_on_submit():
+        name = form.name.data
+        form.name.data = '' # 清空表单字段
+    return render_template('index.html', form=form, name = name,
                            current_time=datetime.utcnow()) #current_time属于moment类
 
 @app.route('/user/<name>')
