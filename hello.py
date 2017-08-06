@@ -26,6 +26,9 @@ moment = Moment(app) #初始化Flask Moment
 def index():
     form=NameForm() # NameForm是上面定义的类（继承自flask_wtf.FlaskForm）
     if form.validate_on_submit():
+        old_name = session.get('name')
+        if old_name is not None and old_name != form.name.data:
+            flash('Looks like you have changed your name!')
         session['name'] = form.name.data
         return redirect(url_for('index'))
     # 使用get() 获取字典中键对应的值以避免未找到键的异常情况，
