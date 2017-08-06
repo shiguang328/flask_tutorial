@@ -4,10 +4,14 @@ from flask_bootstrap import Bootstrap
 from flask_script import Manager
 from flask_moment import Moment #Flask-Moment 是一个Flask 程序扩展，能把moment.js 集成到Jinja2 模板中。
 from datetime import datetime
+import os
 #表单相关
 from flask_wtf import FlaskForm # 以前的Form变成了FlaskForm,新版本中只有FlaskForm了
 from wtforms import StringField,SubmitField
 from wtforms.validators import Required
+
+#数据库相关
+from flask_sqlalchemy import SQLAlchemy
 
 # StringField类表示属性为type="text" 的<input> 元素
 # SubmitField 类表示属性为type="submit" 的<input> 元素
@@ -18,9 +22,35 @@ class NameForm(FlaskForm):
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string' #设置Flask-WTF
+
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app) #初始化Flask Moment
+
+# 数据库相关
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir,'data.sqlite')
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True # 每次请求结束后都会自动提交数据库中的变动
+db = SQLAlchemy(app) #db 对象是SQLAlchemy 类的实例，表示程序使用的数据库，同时还获得了Flask-SQLAlchemy提供的所有功能
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    users = db.relationship('User', backref='role')
+
+    def __repr__(self):
+        return '<Role %r>' % self.name
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, index=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id')) #传给db.ForeignKey() 的参数'roles.id' 表明，这列的值是roles 表中行的id 值
+
+    def __repr__(self):
+        return '<User %r>' % self.username
+
 
 @app.route('/', methods=['GET','POST'])
 def index():
