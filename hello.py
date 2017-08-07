@@ -37,7 +37,7 @@ class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    users = db.relationship('User', backref='role')
+    users = db.relationship('User', backref='role', lazy='dynamic')
 
     def __repr__(self):
         return '<Role %r>' % self.name
@@ -56,14 +56,20 @@ class User(db.Model):
 def index():
     form=NameForm() # NameForm是上面定义的类（继承自flask_wtf.FlaskForm）
     if form.validate_on_submit():
-        old_name = session.get('name')
-        if old_name is not None and old_name != form.name.data:
-            flash('Looks like you have changed your name!')
-        session['name'] = form.name.data
+        user = User.query.filter_by(username=form.name.data).first()
+        if user is None:
+            user = User(username=form.name.data)
+            db.session.add(user)
+            session['known'] = False
+        else:
+            session['known'] = True
+        session['name']=form.name.data
+        form.name.data = ''
         return redirect(url_for('index'))
     # 使用get() 获取字典中键对应的值以避免未找到键的异常情况，
     # 因为对于不存在的键，get() 会返回默认值None。
     return render_template('index.html', form=form, name = session.get('name'),
+                           known = session.get('known',False),
                            current_time=datetime.utcnow()) #current_time属于moment类
 
 @app.route('/user/<name>')
