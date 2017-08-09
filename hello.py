@@ -5,13 +5,12 @@ from flask_script import Manager
 from flask_moment import Moment #Flask-Moment 是一个Flask 程序扩展，能把moment.js 集成到Jinja2 模板中。
 from datetime import datetime
 import os
-#表单相关
 from flask_wtf import FlaskForm # 以前的Form变成了FlaskForm,新版本中只有FlaskForm了
 from wtforms import StringField,SubmitField
 from wtforms.validators import Required
-
-#数据库相关
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
+
 
 # StringField类表示属性为type="text" 的<input> 元素
 # SubmitField 类表示属性为type="submit" 的<input> 元素
@@ -23,9 +22,17 @@ class NameForm(FlaskForm):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string' #设置Flask-WTF
 
+# mail 相关配置
+app.config['MAIL_SERVER'] = 'smtp.163.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app) #初始化Flask Moment
+mail = Mail(app)
 
 # 数据库相关
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -85,5 +92,5 @@ def internal_server_error(e):
     return render_template('500.html'),500
 
 if __name__ =='__main__':
-    #manager.run()
-    app.run(debug=True)
+    manager.run()
+    #app.run(debug=True)
