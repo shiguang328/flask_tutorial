@@ -3,6 +3,7 @@ from wtforms import StringField, TextAreaField, BooleanField, SelectField,\
     SubmitField
 from wtforms.validators import DataRequired, Length, Email, Regexp
 from wtforms import ValidationError
+from flask_pagedown.fields import PageDownField
 from ..models import Role, User
 
 
@@ -26,8 +27,7 @@ class EditProfileAdminForm(FlaskForm):
         DataRequired(), Length(1, 64),
         Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0,
                'Usernames must have only letters, numbers, dots or '
-               'underscores')
-    ])
+               'underscores')])
     confirmed = BooleanField('Confirmed')
     role = SelectField('Role', coerce=int)  # 下拉列表
     name = StringField('Real name', validators=[Length(0, 64)])
@@ -55,3 +55,13 @@ class EditProfileAdminForm(FlaskForm):
         if field.data != self.user.username and \
                 User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use.')
+
+
+class PostForm(FlaskForm):
+    body = PageDownField("What's on your mind?", validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+class CommentForm(FlaskForm):
+    body = StringField('Enter your comment', validators=[DataRequired()])
+    submit = SubmitField('Submit')
